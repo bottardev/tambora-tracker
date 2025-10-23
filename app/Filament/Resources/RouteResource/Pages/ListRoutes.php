@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Filament\Resources\TripResource\Pages;
+namespace App\Filament\Resources\RouteResource\Pages;
 
-use App\Filament\Resources\TripResource;
+use App\Filament\Resources\RouteResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
-class ListTrips extends ListRecords
+class ListRoutes extends ListRecords
 {
-    protected static string $resource = TripResource::class;
+    protected static string $resource = RouteResource::class;
 
     protected function getHeaderActions(): array
     {

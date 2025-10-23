@@ -2,64 +2,103 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\TripResource\Pages;
+use App\Filament\Resources\TripResource\RelationManagers;
 use App\Models\Trip;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use App\Filament\Resources\TripResource\Pages;
-
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class TripResource extends Resource
 {
     protected static ?string $model = Trip::class;
+
     protected static ?string $navigationGroup = 'Operations';
     protected static ?string $navigationIcon = 'heroicon-o-map';
-
+    protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
     {
-        return $form->schema([
-            Forms\Components\Select::make('hiker_id')->relationship('hiker', 'name')->required(),
-            Forms\Components\Select::make('route_id')->relationship('route', 'name')->required(),
-            Forms\Components\DateTimePicker::make('start_time')->required(),
-            Forms\Components\DateTimePicker::make('end_time'),
-            Forms\Components\Select::make('status')->options([
-                'draft' => 'Draft',
-                'ongoing' => 'Ongoing',
-                'paused' => 'Paused',
-                'finished' => 'Finished',
-                'canceled' => 'Canceled'
-            ])->required(),
-        ]);
+        return $form
+            ->schema([
+                Forms\Components\TextInput::make('hiker_id')
+                    ->required()
+                    ->maxLength(36),
+                Forms\Components\TextInput::make('route_id')
+                    ->required()
+                    ->maxLength(36),
+                Forms\Components\DateTimePicker::make('start_time')
+                    ->required(),
+                Forms\Components\DateTimePicker::make('end_time'),
+                Forms\Components\TextInput::make('status')
+                    ->required(),
+            ]);
     }
-
 
     public static function table(Table $table): Table
     {
-        return $table->columns([
-            Tables\Columns\TextColumn::make('hiker.name')->label('Hiker')->searchable(),
-            Tables\Columns\TextColumn::make('route.name')->label('Route'),
-            Tables\Columns\BadgeColumn::make('status')->colors([
-                'secondary' => 'draft',
-                'success' => 'ongoing',
-                'warning' => 'paused',
-                'primary' => 'finished',
-                'danger' => 'canceled'
-            ]),
-            Tables\Columns\TextColumn::make('start_time')->dateTime(),
-            Tables\Columns\TextColumn::make('last_location')->label('Last Lat,Lng')->getStateUsing(function (Trip $record) {
-                $loc = $record->locations()->latest('ts')->first();
-                if (!$loc) return '-';
-                $p = data_get($loc, 'point'); // tampilkan raw WKT jika pakai spatial package
-                return $p ? 'point' : '-';
-            }),
-        ])->actions([
-            Tables\Actions\EditAction::make(),
-        ]);
+        return $table
+            ->columns([
+                Tables\Columns\TextColumn::make('id')
+                    ->label('ID')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('hiker_id')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('route_id')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('start_time')
+                    ->dateTime()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('end_time')
+                    ->dateTime()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('status'),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                //
+            ])
+            ->actions([
+                Tables\Actions\EditAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
     }
 
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        $activeTrips = static::getModel()::query()
+            ->where('status', 'ongoing')
+            ->count();
+
+        return $activeTrips > 0 ? (string) $activeTrips : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'success';
+    }
 
     public static function getPages(): array
     {

@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\HikerResource\Pages;
-use App\Filament\Resources\HikerResource\RelationManagers;
-use App\Models\Hiker;
+use App\Filament\Resources\RouteResource\Pages;
+use App\Filament\Resources\RouteResource\RelationManagers;
+use App\Models\Route;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,13 +13,13 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class HikerResource extends Resource
+class RouteResource extends Resource
 {
-    protected static ?string $model = Hiker::class;
+    protected static ?string $model = Route::class;
 
     protected static ?string $navigationGroup = 'Master Data';
-    protected static ?string $navigationIcon = 'heroicon-o-user-group';
-    protected static ?int $navigationSort = 3;
+    protected static ?string $navigationIcon = 'heroicon-o-flag';
+    protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
     {
@@ -28,17 +28,13 @@ class HikerResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('email')
-                    ->email()
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('phone')
-                    ->tel()
-                    ->maxLength(255)
+                Forms\Components\Textarea::make('description')
+                    ->columnSpanFull(),
+                Forms\Components\TextInput::make('total_distance_km')
+                    ->numeric()
                     ->default(null),
-                Forms\Components\TextInput::make('emergency_contact')
-                    ->maxLength(255)
-                    ->default(null),
+                Forms\Components\TextInput::make('path')
+                    ->required(),
             ]);
     }
 
@@ -51,12 +47,9 @@ class HikerResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('email')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('phone')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('emergency_contact')
-                    ->searchable(),
+                Tables\Columns\TextColumn::make('total_distance_km')
+                    ->numeric()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -65,6 +58,7 @@ class HikerResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('path'),
             ])
             ->filters([
                 //
@@ -89,9 +83,9 @@ class HikerResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListHikers::route('/'),
-            'create' => Pages\CreateHiker::route('/create'),
-            'edit' => Pages\EditHiker::route('/{record}/edit'),
+            'index' => Pages\ListRoutes::route('/'),
+            'create' => Pages\CreateRoute::route('/create'),
+            'edit' => Pages\EditRoute::route('/{record}/edit'),
         ];
     }
 }

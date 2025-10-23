@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\HikerResource\Pages;
 
 use App\Filament\Resources\HikerResource;
+use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateHiker extends CreateRecord
