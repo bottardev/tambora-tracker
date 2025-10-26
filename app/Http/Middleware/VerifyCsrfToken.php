@@ -11,7 +11,9 @@ class VerifyCsrfToken extends Middleware
      *
      * @var array<int, string>
      */
-    protected $except = [
+     protected $except = [
         'telescope-api/*',
+        'telescope/telescope-api/*', // dashboard makes calls under /telescope/...
+        'telescope/*',               // belt-and-suspenders
     ];
 }
