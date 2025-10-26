@@ -1,62 +1,76 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+<h1>Tambora Tracker Backend</h1>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Tambora Tracker is a Laravel-powered backend that manages hiking expeditions on Mount Tambora.  
+It provides:
 
-## About Laravel
+- Route and checkpoint metadata seeded with the Pancasila trail.
+- Hiker profiles linked to authenticated user accounts and role-based access control.
+- Trip tracking endpoints for ranger and mobile clients, including location and event ingestion.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Getting Started
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- PHP 8.2+, Composer, and a database supported by Laravel (MySQL or MariaDB recommended).
+- Clone the repository and install dependencies:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+```bash
+composer install
+```
 
-## Learning Laravel
+- Copy `.env.example` to `.env` and adjust database / Sanctum settings.
+- Generate the application key:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+```bash
+php artisan key:generate
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- Run migrations and seeders (routes, roles, default admin account):
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+php artisan migrate --seed
+```
 
-## Laravel Sponsors
+- Serve the API locally:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+php artisan serve
+```
 
-### Premium Partners
+## Authentication
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+All protected endpoints require a Laravel Sanctum token.  
+Use the login endpoint to obtain a `plainTextToken`, then pass it in the `Authorization: Bearer <token>` header.
 
-## Contributing
+## API Endpoints
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+| Method | URI | Description | Auth |
+| ------ | --- | ----------- | ---- |
+| POST | `/api/auth/login` | Issue Sanctum token for a user account (`email`, `password`). | – |
+| GET | `/api/routes` | List available hiking routes. | ✔ |
+| GET | `/api/routes/{route}` | Show route details including checkpoints. | ✔ |
+| POST | `/api/trips` | Create a new trip (`hiker_id`, `route_id`, `start_time`). | ✔ |
+| GET | `/api/trips/{trip}` | Retrieve trip details with related hiker and route. | ✔ |
+| PATCH | `/api/trips/{trip}` | Update trip status or end time. | ✔ |
+| POST | `/api/trips/{trip}/locations` | Submit batched GPS points for a trip. | ✔ |
+| GET | `/api/trips/{trip}/last` | Fetch the last recorded location for a trip. | ✔ |
+| POST | `/api/trips/{trip}/events` | Record notable trip events (e.g., emergency, checkpoint reached). | ✔ |
 
-## Code of Conduct
+> Tip: The Filament admin panel can be used to manage hikers, routes, and trips through a browser UI.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Seeding Reference Accounts
 
-## Security Vulnerabilities
+The `RolesSeeder` creates an administrator account:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- Email: `admin@tambora.local`
+- Password: `password`
 
-## License
+Assign the `hiker` role to newly created users to enable mobile access.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-# tambora-tracker
+## Testing
+
+Run the test suite with:
+
+```bash
+php artisan test
+```
+
+Ensure background jobs and queues are configured if you enable the `MapMatchAndGeofenceJob`.

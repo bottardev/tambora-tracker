@@ -18,6 +18,6 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid credentials'], 422);
         }
         $token = $user->createToken('mobile')->plainTextToken;
-        return ['token' => $token, 'user' => $user];
+        return ['token' => $token, 'user' => $user->loadMissing('hiker')];
     }
 }

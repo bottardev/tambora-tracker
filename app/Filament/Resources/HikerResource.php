@@ -12,6 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Forms\Components\Component;
 
 class HikerResource extends Resource
 {
@@ -31,6 +32,7 @@ class HikerResource extends Resource
                 Forms\Components\TextInput::make('email')
                     ->email()
                     ->required()
+                    ->unique(ignoreRecord: true)
                     ->maxLength(255),
                 Forms\Components\TextInput::make('phone')
                     ->tel()
@@ -39,6 +41,21 @@ class HikerResource extends Resource
                 Forms\Components\TextInput::make('emergency_contact')
                     ->maxLength(255)
                     ->default(null),
+                Forms\Components\TextInput::make('password')
+                    ->label('Password')
+                    ->password()
+                    ->revealable()
+                    ->maxLength(255)
+                    ->dehydrated(fn ($state) => filled($state))
+                    ->required(fn (Component $component) => $component->getLivewire() instanceof Pages\CreateHiker),
+                Forms\Components\TextInput::make('password_confirmation')
+                    ->label('Confirm Password')
+                    ->password()
+                    ->revealable()
+                    ->maxLength(255)
+                    ->same('password')
+                    ->dehydrated(false)
+                    ->required(fn (Component $component) => $component->getLivewire() instanceof Pages\CreateHiker),
             ]);
     }
 
