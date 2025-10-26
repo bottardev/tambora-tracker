@@ -99,6 +99,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Telescope Allowed IPs
+    |--------------------------------------------------------------------------
+    |
+    | Provide a comma separated list of IP addresses that may access Telescope
+    | when the application environment is not local. Values are read from the
+    | TELESCOPE_ALLOWED_IPS environment variable at runtime.
+    |
+    */
+
+    'allowed_ips' => array_filter(array_map('trim', explode(',', env('TELESCOPE_ALLOWED_IPS', '')))),
+
+    /*
+    |--------------------------------------------------------------------------
     | Allowed / Ignored Paths & Commands
     |--------------------------------------------------------------------------
     |

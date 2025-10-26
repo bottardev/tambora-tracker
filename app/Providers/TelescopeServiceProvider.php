@@ -55,8 +55,15 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
      */
     protected function gate(): void
     {
-        Gate::define('viewTelescope', function ($user) {
-            return in_array($user->email, [
+        Gate::define('viewTelescope', function ($user = null) {
+            $allowedIps = config('telescope.allowed_ips', []);
+            $request = request();
+
+            if ($request && in_array($request->ip(), $allowedIps, true)) {
+                return true;
+            }
+
+            return $user && in_array($user->email, [
                 //
             ]);
         });
