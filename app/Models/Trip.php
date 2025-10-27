@@ -6,19 +6,25 @@ use App\Models\Concerns\HasUuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
 class Trip extends Model
 {
     use HasUuid;
 
-    protected $fillable = ['code', 'hiker_id', 'route_id', 'start_time', 'end_time', 'status'];
+    protected $fillable = ['code', 'booking_id', 'hiker_id', 'route_id', 'start_time', 'end_time', 'status'];
 
     protected $casts = ['start_time' => 'datetime', 'end_time' => 'datetime'];
 
     public function hiker()
     {
         return $this->belongsTo(Hiker::class);
+    }
+
+    public function booking(): BelongsTo
+    {
+        return $this->belongsTo(Booking::class);
     }
 
     public function route()

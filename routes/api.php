@@ -6,12 +6,17 @@ use App\Http\Controllers\Api\RouteController as RCtrl;
 use App\Http\Controllers\Api\TripController as TCtrl;
 use App\Http\Controllers\Api\LocationController as LCtrl;
 use App\Http\Controllers\Api\EventController as ECtrl;
+use App\Http\Controllers\Api\BookingController as BCtrl;
 
 
 Route::post('/auth/login', [AuthController::class, 'login']);
 
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/bookings', [BCtrl::class, 'index']);
+    Route::get('/bookings/availability', [BCtrl::class, 'availability']);
+    Route::post('/bookings', [BCtrl::class, 'store']);
+
     Route::get('/routes/{route}', [RCtrl::class, 'show']);
     Route::get('/routes', [RCtrl::class, 'index']);
 

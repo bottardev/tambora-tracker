@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\BookingResource;
 use App\Filament\Resources\TripResource\Pages;
 use App\Filament\Resources\TripResource\RelationManagers;
 use App\Models\Trip;
@@ -37,6 +38,12 @@ class TripResource extends Resource
                     ->hint('Generated when trip is saved')
                     ->visible(fn($livewire) => filled($livewire->record?->code ?? null))
                     ->default(fn($livewire) => $livewire->record?->code),
+                Select::make('booking_id')
+                    ->label('Booking')
+                    ->relationship('booking', 'code')
+                    ->searchable()
+                    ->preload()
+                    ->nullable(),
                 Select::make('hiker_id')
                     ->label('Hiker')
                     ->relationship('hiker', 'name')
@@ -66,7 +73,7 @@ class TripResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn(Builder $query) => $query->with(['hiker', 'route', 'lastLocation']))
+            ->modifyQueryUsing(fn(Builder $query) => $query->with(['booking', 'hiker', 'route', 'lastLocation']))
             ->recordUrl(fn(Trip $record) => static::getUrl('view', ['record' => $record]))
             ->columns([
                 Tables\Columns\TextColumn::make('id')
@@ -77,6 +84,13 @@ class TripResource extends Resource
                     ->label('Code')
                     ->searchable()
                     ->copyable(),
+                Tables\Columns\TextColumn::make('booking.code')
+                    ->label('Booking')
+                    ->badge()
+                    ->color('info')
+                    ->url(fn(Trip $record) => $record->booking ? BookingResource::getUrl('view', ['record' => $record->booking]) : null, shouldOpenInNewTab: true)
+                    ->placeholder('-')
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('hiker.name')
                     ->label('Hiker')
                     ->sortable()
@@ -161,6 +175,10 @@ class TripResource extends Resource
                         ->schema([
                             TextEntry::make('code')->label('Code')->copyable(),
                             TextEntry::make('id')->label('Trip ID')->copyable(),
+                            TextEntry::make('booking.code')
+                                ->label('Booking Code')
+                                ->placeholder('-')
+                                ->url(fn(Trip $record) => $record->booking ? BookingResource::getUrl('view', ['record' => $record->booking]) : null, shouldOpenInNewTab: true),
                             TextEntry::make('status')->badge(),
                             TextEntry::make('start_time')->dateTime()->label('Start time'),
                             TextEntry::make('end_time')->dateTime()->label('End time'),
