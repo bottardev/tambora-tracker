@@ -24,11 +24,12 @@ class LocationController extends Controller
 
         DB::beginTransaction();
         foreach ($payload['items'] as $it) {
-            // Insert POINT dengan SRID 4326
+            $wkt = sprintf('POINT(%F %F)', $it['lng'], $it['lat']);
+
             DB::statement(
-                "INSERT INTO locations (trip_id, ts, point, accuracy_m, battery_pct, snapped, on_trail, created_at, updated_at)
-VALUES (?, ?, ST_SRID(Point(?, ?), 4326), ?, ?, 0, 0, NOW(), NOW())",
-                [$trip->id, $it['ts'], $it['lng'], $it['lat'], $it['accuracy_m'] ?? null, $it['battery_pct'] ?? null]
+                "INSERT INTO locations (trip_id, recorded_at, location, accuracy_m, battery_pct, snapped, on_trail, created_at, updated_at)
+VALUES (?, ?, ST_GeomFromText(?, 4326), ?, ?, 0, 0, NOW(), NOW())",
+                [$trip->id, $it['ts'], $wkt, $it['accuracy_m'] ?? null, $it['battery_pct'] ?? null]
             );
         }
         DB::commit();
@@ -44,12 +45,12 @@ VALUES (?, ?, ST_SRID(Point(?, ?), 4326), ?, ?, 0, 0, NOW(), NOW())",
 
     public function last(Trip $trip)
     {
-        $loc = $trip->locations()->latest('ts')->first();
+        $loc = $trip->locations()->latest('recorded_at')->first();
         if (!$loc) return ['data' => null];
         // Ambil WKT => lat,lng simple (butuh spatial package untuk decode lebih rapi)
-        $pt = DB::selectOne("SELECT ST_X(point) as lng, ST_Y(point) as lat FROM locations WHERE id=?", [$loc->id]);
+        $pt = DB::selectOne("SELECT ST_X(location) as lng, ST_Y(location) as lat FROM locations WHERE id=?", [$loc->id]);
         return [
-            'ts' => $loc->ts,
+            'ts' => $loc->recorded_at,
             'lat' => $pt->lat ?? null,
             'lng' => $pt->lng ?? null,
             'accuracy_m' => $loc->accuracy_m,

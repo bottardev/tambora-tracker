@@ -36,11 +36,17 @@ class MapMatchAndGeofenceJob implements ShouldQueue
         $checkpoints = $trip->route?->checkpoints ?? collect();
         foreach ($checkpoints as $cp) {
             // ambil lokasi terbaru X menit terakhir
-            $pts = DB::select(
-                "SELECT id, ts, ST_Distance_Sphere(point, ST_SRID(Point(?, ?),4326)) as dist
-FROM locations WHERE trip_id=? AND ts>= (NOW() - INTERVAL 2 HOUR)
-ORDER BY ts DESC LIMIT 50",
-                [$this->getLng($cp->location), $this->getLat($cp->location), $trip->id]
+        $lat = $this->getLat($cp->location);
+        $lng = $this->getLng($cp->location);
+        if ($lat === null || $lng === null) {
+            continue;
+        }
+        $wkt = sprintf('POINT(%F %F)', $lng, $lat);
+        $pts = DB::select(
+            "SELECT id, recorded_at, ST_Distance_Sphere(location, ST_GeomFromText(?, 4326)) as dist
+FROM locations WHERE trip_id=? AND recorded_at>= (NOW() - INTERVAL 2 HOUR)
+ORDER BY recorded_at DESC LIMIT 50",
+                [$wkt, $trip->id]
             );
             if (!$pts) continue;
             foreach ($pts as $pt) {
@@ -49,7 +55,7 @@ ORDER BY ts DESC LIMIT 50",
                         'trip_id' => $trip->id,
                         'type' => 'CHECKIN_POS',
                         'checkpoint_id' => $cp->id,
-                        'ts' => $pt->ts,
+                        'ts' => $pt->recorded_at,
                     ]);
                     break;
                 }
