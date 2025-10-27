@@ -10,7 +10,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('trips', function (Blueprint $table) {
-            $table->string('code')->unique()->after('id');
+            $table->string('code')->nullable()->after('id');
         });
 
         $trips = DB::table('trips')->select('id')->get();
@@ -22,6 +22,12 @@ return new class extends Migration {
 
             DB::table('trips')->where('id', $trip->id)->update(['code' => $code]);
         }
+
+        Schema::table('trips', function (Blueprint $table) {
+            $table->unique('code');
+        });
+
+        DB::statement("ALTER TABLE trips MODIFY code VARCHAR(255) NOT NULL");
     }
 
     public function down(): void
