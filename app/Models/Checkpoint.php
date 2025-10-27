@@ -31,9 +31,9 @@ class Checkpoint extends Model
                     return null;
                 }
 
-                $result = DB::selectOne('SELECT ST_AsBinary(ST_GeomFromText(?, 4326)) AS geom', [$value]);
+                $escaped = str_replace("'", "''", $value);
 
-                return $result?->geom;
+                return DB::raw("ST_GeomFromText('{$escaped}', 4326)");
             }
         );
     }

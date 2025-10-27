@@ -27,4 +27,13 @@ class EditRoute extends EditRecord
 
         return $data;
     }
+
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        $data['path_wkt'] = $data['path'] ?? null;
+
+        unset($data['path']);
+
+        return $data;
+    }
 }
