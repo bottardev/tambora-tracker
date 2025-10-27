@@ -27,7 +27,7 @@ class TripController extends Controller
     }
     public function update(Request $r, Trip $trip)
     {
-        $trip->update($r->validate(['status' => 'in:draft,ongoing,paused,finished,canceled', 'end_time' => 'nullable|date']));
+        $trip->update($r->validate(['status' => 'in:ongoing,completed,cancelled', 'end_time' => 'nullable|date']));
         return $trip;
     }
 }
