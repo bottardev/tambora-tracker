@@ -16,4 +16,15 @@ class EditRoute extends EditRecord
             Actions\DeleteAction::make(),
         ];
     }
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        $path = $data['path_wkt'] ?? null;
+
+        $data['path'] = filled($path) ? $path : null;
+
+        unset($data['path_wkt']);
+
+        return $data;
+    }
 }

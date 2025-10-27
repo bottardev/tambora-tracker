@@ -7,6 +7,7 @@ use App\Filament\Resources\RouteResource\RelationManagers;
 use App\Models\Route;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Components\Textarea;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -28,13 +29,24 @@ class RouteResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\Textarea::make('description')
+                Textarea::make('description')
                     ->columnSpanFull(),
                 Forms\Components\TextInput::make('total_distance_km')
                     ->numeric()
                     ->default(null),
-                Forms\Components\TextInput::make('path')
-                    ->required(),
+                Textarea::make('path_wkt')
+                    ->label('Path (WKT)')
+                    ->rows(3)
+                    ->required()
+                    ->helperText('Gunakan format LINESTRING(lng lat, ...) dengan SRID 4326.')
+                    ->afterStateHydrated(function (Textarea $component, ?string $state, ?Route $record) {
+                        if (filled($state) || ! $record) {
+                            return;
+                        }
+
+                        $component->state($record->path);
+                    })
+                    ->dehydrateStateUsing(fn (?string $state) => filled($state) ? trim($state) : null),
             ]);
     }
 
