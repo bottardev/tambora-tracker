@@ -7,6 +7,7 @@ use App\Filament\Resources\TripResource\RelationManagers;
 use App\Models\Trip;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Components\Select;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -25,12 +26,18 @@ class TripResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('hiker_id')
-                    ->required()
-                    ->maxLength(36),
-                Forms\Components\TextInput::make('route_id')
-                    ->required()
-                    ->maxLength(36),
+                Select::make('hiker_id')
+                    ->label('Hiker')
+                    ->relationship('hiker', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->required(),
+                Select::make('route_id')
+                    ->label('Route')
+                    ->relationship('route', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->required(),
                 Forms\Components\DateTimePicker::make('start_time')
                     ->required(),
                 Forms\Components\DateTimePicker::make('end_time'),
@@ -46,9 +53,13 @@ class TripResource extends Resource
                 Tables\Columns\TextColumn::make('id')
                     ->label('ID')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('hiker_id')
+                Tables\Columns\TextColumn::make('hiker.name')
+                    ->label('Hiker')
+                    ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('route_id')
+                Tables\Columns\TextColumn::make('route.name')
+                    ->label('Route')
+                    ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('start_time')
                     ->dateTime()
