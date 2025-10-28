@@ -2,9 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Str;
 
 return new class extends Migration {
     public function up(): void
@@ -27,10 +25,9 @@ return new class extends Migration {
             $table->string('created_via')->default('dashboard');
             $table->timestamps();
             $table->softDeletes();
-
+            // foreignId already defines FK for created_by
             $table->foreign('route_id')->references('id')->on('routes')->cascadeOnDelete();
             $table->foreign('hiker_id')->references('id')->on('hikers')->cascadeOnDelete();
-            // foreignId already defines FK for created_by
         });
     }
 
