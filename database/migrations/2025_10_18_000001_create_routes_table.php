@@ -9,7 +9,8 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('routes', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->engine = 'InnoDB';
+            $table->uuid('id')->primary()->collation('utf8mb4_unicode_ci');
             $table->string('name');
             $table->text('description')->nullable();
             $table->float('total_distance_km')->nullable();

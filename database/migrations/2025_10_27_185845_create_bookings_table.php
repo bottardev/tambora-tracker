@@ -9,11 +9,13 @@ return new class extends Migration {
     {
         Schema::create('bookings', function (Blueprint $table) {
             $table->engine = 'InnoDB';
-            $table->uuid('id')->primary();
+            $table->charset = config('database.connections.mysql.charset', 'utf8mb4');
+            $table->collation = config('database.connections.mysql.collation', 'utf8mb4_unicode_ci');
+            $table->uuid('id')->primary()->collation('utf8mb4_unicode_ci');
             $table->string('code', 32)->unique();
             $table->date('trip_date');
-            $table->uuid('route_id')->index();
-            $table->uuid('hiker_id')->index();
+            $table->char('route_id', 36)->collation('utf8mb4_unicode_ci')->index();
+            $table->char('hiker_id', 36)->collation('utf8mb4_unicode_ci')->index();
             $table->string('status')->default('pending-payment');
             $table->string('payment_method')->nullable();
             $table->dateTime('payment_due_at')->nullable();

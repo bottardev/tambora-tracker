@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
 public function up(): void {
 Schema::create('hikers', function (Blueprint $table) {
-$table->uuid('id')->primary();
+$table->engine = 'InnoDB';
+$table->uuid('id')->primary()->collation('utf8mb4_unicode_ci');
 $table->string('name');
 $table->string('email')->unique();
 $table->string('phone')->nullable();

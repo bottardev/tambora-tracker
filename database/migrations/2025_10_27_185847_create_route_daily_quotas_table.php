@@ -8,8 +8,9 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('route_daily_quotas', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
-            $table->uuid('route_id');
+            $table->uuid('route_id')->collation('utf8mb4_unicode_ci');
             $table->date('date');
             $table->unsignedInteger('capacity');
             $table->unsignedInteger('booked')->default(0);
