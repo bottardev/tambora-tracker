@@ -8,11 +8,12 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('bookings', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->uuid('id')->primary();
-            $table->string('code')->unique();
+            $table->string('code', 32)->unique();
             $table->date('trip_date');
-            $table->uuid('route_id');
-            $table->uuid('hiker_id');
+            $table->uuid('route_id')->index();
+            $table->uuid('hiker_id')->index();
             $table->string('status')->default('pending-payment');
             $table->string('payment_method')->nullable();
             $table->dateTime('payment_due_at')->nullable();
