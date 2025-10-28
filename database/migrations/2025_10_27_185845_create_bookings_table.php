@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
@@ -14,8 +15,8 @@ return new class extends Migration {
             $table->uuid('id')->primary()->collation('utf8mb4_unicode_ci');
             $table->string('code', 32)->unique();
             $table->date('trip_date');
-            $table->uuid('route_id')->collation('utf8mb4_unicode_ci');
-            $table->uuid('hiker_id')->collation('utf8mb4_unicode_ci');
+            $table->uuid('route_id');
+            $table->uuid('hiker_id');
             $table->string('status')->default('pending-payment');
             $table->string('payment_method')->nullable();
             $table->dateTime('payment_due_at')->nullable();
@@ -32,6 +33,15 @@ return new class extends Migration {
             $table->foreign('route_id')->references('id')->on('routes')->cascadeOnDelete();
             $table->foreign('hiker_id')->references('id')->on('hikers')->cascadeOnDelete();
         });
+
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement(
+                "ALTER TABLE bookings MODIFY route_id CHAR(36) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL"
+            );
+            DB::statement(
+                "ALTER TABLE bookings MODIFY hiker_id CHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL"
+            );
+        }
     }
 
     public function down(): void
