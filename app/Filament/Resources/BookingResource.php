@@ -107,8 +107,15 @@ class BookingResource extends Resource
                                     ->label('Health Certificate')
                                     ->disk('public')
                                     ->directory('health-certificates')
-                                    ->image()
+                                    ->acceptedFileTypes([
+                                        'image/jpeg',
+                                        'image/png',
+                                        'application/pdf',
+                                        'application/msword',
+                                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                                    ])
                                     ->imagePreviewHeight('150')
+                                    ->previewable()
                                     ->downloadable()
                                     ->openable()
                                     ->maxSize(5120)

@@ -138,7 +138,12 @@ class BookingController extends Controller
             'participants.*.id_type' => ['nullable', 'string', 'max:64'],
             'participants.*.id_number' => ['nullable', 'string', 'max:128'],
             'participants.*.health_certificate_path' => ['nullable', 'string'],
-            'participants.*.health_certificate' => ['nullable', 'image', 'max:5120'],
+            'participants.*.health_certificate' => [
+                'nullable',
+                'file',
+                'mimes:jpg,jpeg,png,pdf,doc,docx',
+                'max:5120',
+            ],
             'participants.*.is_leader' => ['nullable', 'boolean'],
         ]);
 
