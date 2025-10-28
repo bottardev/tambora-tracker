@@ -10,7 +10,7 @@ return new class extends Migration {
         Schema::create('holidays', function (Blueprint $table) {
             $table->id();
             $table->date('date');
-            $table->uuid('route_id')->nullable();
+            $table->char('route_id', 36)->charset('latin1')->collation('latin1_swedish_ci')->nullable();
             $table->string('reason')->nullable();
             $table->boolean('is_closed')->default(true);
             $table->timestamps();
