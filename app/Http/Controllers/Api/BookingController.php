@@ -138,6 +138,7 @@ class BookingController extends Controller
             'participants.*.id_type' => ['nullable', 'string', 'max:64'],
             'participants.*.id_number' => ['nullable', 'string', 'max:128'],
             'participants.*.health_certificate_path' => ['nullable', 'string'],
+            'participants.*.health_certificate' => ['nullable', 'image', 'max:5120'],
             'participants.*.is_leader' => ['nullable', 'boolean'],
         ]);
 
@@ -198,7 +199,7 @@ class BookingController extends Controller
             ], 422);
         }
 
-        $booking = DB::transaction(function () use ($validated, $participants, $participantCount, $hiker, $user, $tripDate) {
+        $booking = DB::transaction(function () use ($validated, $participants, $participantCount, $hiker, $user, $tripDate, $request) {
             $booking = Booking::create([
                 'trip_date' => $tripDate,
                 'route_id' => $validated['route_id'],
@@ -224,6 +225,13 @@ class BookingController extends Controller
                     $hasLeader = true;
                 }
 
+                $healthCertificatePath = $participant['health_certificate_path'] ?? null;
+
+                if ($request->hasFile("participants.$index.health_certificate")) {
+                    $file = $request->file("participants.$index.health_certificate");
+                    $healthCertificatePath = $file->store('health-certificates', 'public');
+                }
+
                 BookingParticipant::create([
                     'booking_id' => $booking->id,
                     'name' => $participant['name'],
@@ -234,7 +242,7 @@ class BookingController extends Controller
                     'occupation' => $participant['occupation'] ?? null,
                     'id_type' => $participant['id_type'] ?? null,
                     'id_number' => $participant['id_number'] ?? null,
-                    'health_certificate_path' => $participant['health_certificate_path'] ?? null,
+                    'health_certificate_path' => $healthCertificatePath,
                     'is_leader' => $isLeader,
                     'meta' => [],
                 ]);

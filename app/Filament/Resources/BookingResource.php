@@ -7,6 +7,7 @@ use App\Models\Booking;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
@@ -102,7 +103,16 @@ class BookingResource extends Resource
                                 TextInput::make('occupation')->maxLength(64),
                                 TextInput::make('id_type')->label('ID Type')->maxLength(64),
                                 TextInput::make('id_number')->label('ID Number')->maxLength(128),
-                                TextInput::make('health_certificate_path')->label('Health Certificate Path'),
+                                FileUpload::make('health_certificate_path')
+                                    ->label('Health Certificate')
+                                    ->disk('public')
+                                    ->directory('health-certificates')
+                                    ->image()
+                                    ->imagePreviewHeight('150')
+                                    ->downloadable()
+                                    ->openable()
+                                    ->maxSize(5120)
+                                    ->nullable(),
                                 Forms\Components\Toggle::make('is_leader')->label('Leader')->inline(false),
                             ])
                             ->columns(2)
