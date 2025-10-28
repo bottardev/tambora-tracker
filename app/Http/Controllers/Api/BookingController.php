@@ -16,6 +16,8 @@ class BookingController extends Controller
 {
     public function index(Request $request)
     {
+        Booking::expireOverdue();
+
         $user = $request->user();
         $hiker = $user->loadMissing('hiker')->hiker;
 
@@ -34,6 +36,8 @@ class BookingController extends Controller
 
     public function availability(Request $request)
     {
+        Booking::expireOverdue();
+
         $validated = $request->validate([
             'route_id' => ['required', 'uuid', Rule::exists('routes', 'id')],
             'from' => ['nullable', 'date'],
@@ -152,6 +156,7 @@ class BookingController extends Controller
             'notes' => ['nullable', 'string'],
             'proof_of_payment_path' => ['nullable', 'string'],
             'proof_of_payment' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf,doc,docx', 'max:5120'],
+            'duration_days' => ['required', 'integer', 'between:1,3'],
             'participants' => ['required', 'array', 'min:1'],
             'participants.*.name' => ['required', 'string', 'max:255'],
             'participants.*.gender' => ['nullable', 'string', 'max:16'],
@@ -264,6 +269,7 @@ class BookingController extends Controller
                 'amount' => $validated['amount'] ?? 0,
                 'currency' => strtoupper($validated['currency'] ?? 'IDR'),
                 'contact_phone' => $validated['contact_phone'],
+                'duration_days' => $validated['duration_days'],
                 'proof_of_payment_path' => $proofPath,
                 'notes' => $validated['notes'] ?? null,
                 'participants_count' => $participantCount,

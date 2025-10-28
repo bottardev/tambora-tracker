@@ -153,6 +153,12 @@ class BookingResource extends Resource
                             ->tel()
                             ->maxLength(32)
                             ->required(),
+                        TextInput::make('duration_days')
+                            ->label('Duration (days)')
+                            ->numeric()
+                            ->minValue(1)
+                            ->maxValue(3)
+                            ->required(),
                         Textarea::make('notes')->columnSpanFull(),
                     ])->columns(2),
                 Section::make('Participants')
@@ -248,6 +254,8 @@ class BookingResource extends Resource
 
     public static function table(Table $table): Table
     {
+        Booking::expireOverdue();
+
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('code')
@@ -281,7 +289,8 @@ class BookingResource extends Resource
                         'warning' => 'pending-payment',
                         'info' => 'awaiting-validation',
                         'success' => 'confirmed',
-                        'danger' => ['cancelled', 'expired'],
+                        'danger' => 'cancelled',
+                        'gray' => 'expired',
                     ])
                     ->label('Status')
                     ->sortable(),
@@ -298,6 +307,10 @@ class BookingResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('contact_phone')
                     ->label('Phone')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('duration_days')
+                    ->label('Duration')
+                    ->suffix(' hari')
                     ->sortable(),
                 Tables\Columns\IconColumn::make('proof_of_payment_path')
                     ->label('Proof')
@@ -357,6 +370,7 @@ class BookingResource extends Resource
                             ->schema([
                                 TextEntry::make('route.name')->label('Route'),
                                 TextEntry::make('hiker.name')->label('Hiker'),
+                                TextEntry::make('duration_days')->label('Duration (days)'),
                                 TextEntry::make('contact_phone')->label('Contact Phone'),
                                 TextEntry::make('proof_of_payment_url')
                                     ->label('Proof of Payment')

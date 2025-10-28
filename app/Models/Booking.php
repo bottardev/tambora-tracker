@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\RouteDailyQuota;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -30,6 +31,7 @@ class Booking extends Model
         'amount',
         'currency',
         'contact_phone',
+        'duration_days',
         'proof_of_payment_path',
         'participants_count',
         'notes',
@@ -145,6 +147,15 @@ class Booking extends Model
             $quota->booked = $booked;
             $quota->save();
         }
+    }
+
+    public static function expireOverdue(): void
+    {
+        static::query()
+            ->whereIn('status', ['pending-payment', 'awaiting-validation'])
+            ->whereNotNull('payment_due_at')
+            ->where('payment_due_at', '<', Carbon::now())
+            ->update(['status' => 'expired']);
     }
 
     public function getProofOfPaymentUrlAttribute(): ?string
