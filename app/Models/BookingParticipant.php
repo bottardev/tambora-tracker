@@ -33,6 +33,19 @@ class BookingParticipant extends Model
         'health_certificate_url',
     ];
 
+    protected static function booted(): void
+    {
+        static::saved(function (BookingParticipant $participant) {
+            $participant->booking?->refreshParticipantsCount();
+            $participant->booking?->syncQuota();
+        });
+
+        static::deleted(function (BookingParticipant $participant) {
+            $participant->booking?->refreshParticipantsCount();
+            $participant->booking?->syncQuota();
+        });
+    }
+
     public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class);

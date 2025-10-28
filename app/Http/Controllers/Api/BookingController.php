@@ -253,6 +253,9 @@ class BookingController extends Controller
                 ]);
             }
 
+            $booking->refreshParticipantsCount();
+            $booking->syncQuota();
+
             return $booking->load(['route', 'participants']);
         });
 
