@@ -14,8 +14,8 @@ return new class extends Migration {
             $table->uuid('id')->primary()->collation('utf8mb4_unicode_ci');
             $table->string('code', 32)->unique();
             $table->date('trip_date');
-            $table->char('route_id', 36)->collation('utf8mb4_unicode_ci')->index();
-            $table->char('hiker_id', 36)->collation('utf8mb4_unicode_ci')->index();
+            $table->uuid('route_id')->collation('utf8mb4_unicode_ci');
+            $table->uuid('hiker_id')->collation('utf8mb4_unicode_ci');
             $table->string('status')->default('pending-payment');
             $table->string('payment_method')->nullable();
             $table->dateTime('payment_due_at')->nullable();
