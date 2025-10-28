@@ -20,6 +20,11 @@ class RouteDailyQuota extends Model
         'date' => 'date',
     ];
 
+    protected $appends = [
+        'available',
+        'label',
+    ];
+
     public function route(): BelongsTo
     {
         return $this->belongsTo(Route::class);
@@ -33,5 +38,22 @@ class RouteDailyQuota extends Model
     public function scopeForRoute(Builder $query, string $routeId): Builder
     {
         return $query->where('route_id', $routeId);
+    }
+
+    public function getAvailableAttribute(): int
+    {
+        $capacity = (int) $this->capacity;
+        $booked = (int) $this->booked;
+
+        if ($capacity <= 0) {
+            return 0;
+        }
+
+        return max($capacity - $booked, 0);
+    }
+
+    public function getLabelAttribute(): string
+    {
+        return sprintf('%d/%d', (int) $this->capacity, (int) $this->booked);
     }
 }

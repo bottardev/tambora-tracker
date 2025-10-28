@@ -61,9 +61,11 @@ class TripResource extends Resource
                 Forms\Components\DateTimePicker::make('end_time'),
                 Select::make('status')
                     ->options([
+                        'draft' => 'Draft',
                         'ongoing' => 'Ongoing',
-                        'completed' => 'Completed',
-                        'cancelled' => 'Cancelled',
+                        'paused' => 'Paused',
+                        'finished' => 'Finished',
+                        'canceled' => 'Cancelled',
                     ])
                     ->default('ongoing')
                     ->required(),
@@ -105,7 +107,22 @@ class TripResource extends Resource
                 Tables\Columns\TextColumn::make('end_time')
                     ->dateTime()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('status'),
+                Tables\Columns\BadgeColumn::make('status')
+                    ->formatStateUsing(fn (string $state) => match ($state) {
+                        'draft' => 'Draft',
+                        'ongoing' => 'Ongoing',
+                        'paused' => 'Paused',
+                        'finished' => 'Finished',
+                        'canceled', 'cancelled' => 'Cancelled',
+                        default => ucfirst($state),
+                    })
+                    ->colors([
+                        'secondary' => 'draft',
+                        'warning' => 'ongoing',
+                        'info' => 'paused',
+                        'success' => 'finished',
+                        'danger' => ['canceled', 'cancelled'],
+                    ]),
                 Tables\Columns\TextColumn::make('lastLocation.recorded_at')
                     ->label('Last Seen')
                     ->dateTime()
@@ -179,7 +196,16 @@ class TripResource extends Resource
                                 ->label('Booking Code')
                                 ->placeholder('-')
                                 ->url(fn(Trip $record) => $record->booking ? BookingResource::getUrl('view', ['record' => $record->booking]) : null, shouldOpenInNewTab: true),
-                            TextEntry::make('status')->badge(),
+                            TextEntry::make('status')
+                                ->badge()
+                                ->formatStateUsing(fn (string $state) => match ($state) {
+                                    'draft' => 'Draft',
+                                    'ongoing' => 'Ongoing',
+                                    'paused' => 'Paused',
+                                    'finished' => 'Finished',
+                                    'canceled', 'cancelled' => 'Cancelled',
+                                    default => ucfirst($state),
+                                }),
                             TextEntry::make('start_time')->dateTime()->label('Start time'),
                             TextEntry::make('end_time')->dateTime()->label('End time'),
                         ])->columns(2),

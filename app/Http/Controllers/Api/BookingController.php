@@ -40,15 +40,22 @@ class BookingController extends Controller
             'to' => ['nullable', 'date'],
         ]);
 
-        $minDays = (int) config('booking.min_days_before_trip', 30);
+        $minDays = (int) config('booking.min_days_before_trip', 3);
+        $maxDays = (int) config('booking.max_days_before_trip', 30);
 
         $from = isset($validated['from'])
             ? Carbon::parse($validated['from'])->startOfDay()
             : now()->startOfDay()->addDays($minDays);
 
+        $upperLimit = now()->startOfDay()->addDays($maxDays);
+
         $to = isset($validated['to'])
             ? Carbon::parse($validated['to'])->startOfDay()
-            : $from->copy()->addDays(60);
+            : $from->copy()->addDays(30);
+
+        if ($to->gt($upperLimit)) {
+            $to = $upperLimit->copy();
+        }
 
         if ($to->lessThan($from)) {
             [$from, $to] = [$to, $from];
@@ -78,6 +85,7 @@ class BookingController extends Controller
             ->groupBy(fn ($booking) => Carbon::parse($booking->trip_date)->format('Y-m-d'));
 
         $results = [];
+        $disabledDates = [];
 
         for ($cursor = $from->copy(); $cursor->lte($to); $cursor->addDay()) {
             $key = $cursor->format('Y-m-d');
@@ -87,6 +95,7 @@ class BookingController extends Controller
             $dayBookings = $bookings->get($key, collect());
 
             $capacity = $quota?->capacity ?? (int) config('booking.default_daily_capacity', 120);
+            $bookedViaQuota = $quota?->booked ?? 0;
             $status = $quota?->status ?? 'open';
 
             if ($holiday && $holiday->is_closed) {
@@ -94,9 +103,13 @@ class BookingController extends Controller
             }
 
             $reserved = $dayBookings->sum('participants_count');
+            if ($bookedViaQuota && $bookedViaQuota > 0) {
+                $reserved = max($reserved, $bookedViaQuota);
+            }
+
             $available = $status === 'open' ? max($capacity - $reserved, 0) : 0;
 
-            $results[] = [
+            $payload = [
                 'date' => $key,
                 'capacity' => $capacity,
                 'reserved' => $reserved,
@@ -104,11 +117,19 @@ class BookingController extends Controller
                 'status' => $status,
                 'is_holiday' => (bool) $holiday,
                 'holiday_reason' => $holiday->reason ?? null,
+                'label' => sprintf('%d/%d', $capacity, $reserved),
             ];
+
+            if ($status !== 'open') {
+                $disabledDates[] = $key;
+            }
+
+            $results[] = $payload;
         }
 
         return [
             'data' => $results,
+            'disabled_dates' => array_values(array_unique($disabledDates)),
         ];
     }
 
@@ -125,18 +146,21 @@ class BookingController extends Controller
             'route_id' => ['required', 'uuid', Rule::exists('routes', 'id')],
             'trip_date' => ['required', 'date'],
             'payment_method' => ['required', Rule::in(['cash', 'transfer'])],
-            'amount' => ['nullable', 'numeric', 'min:0'],
+            'amount' => ['required', 'numeric', 'min:0'],
             'currency' => ['nullable', 'string', 'size:3'],
+            'contact_phone' => ['required', 'string', 'max:32'],
             'notes' => ['nullable', 'string'],
+            'proof_of_payment_path' => ['nullable', 'string'],
+            'proof_of_payment' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf,doc,docx', 'max:5120'],
             'participants' => ['required', 'array', 'min:1'],
             'participants.*.name' => ['required', 'string', 'max:255'],
             'participants.*.gender' => ['nullable', 'string', 'max:16'],
-            'participants.*.nationality' => ['nullable', 'string', 'max:64'],
-            'participants.*.origin_country' => ['nullable', 'string', 'max:64'],
-            'participants.*.age_group' => ['nullable', 'string', 'max:32'],
-            'participants.*.occupation' => ['nullable', 'string', 'max:64'],
-            'participants.*.id_type' => ['nullable', 'string', 'max:64'],
-            'participants.*.id_number' => ['nullable', 'string', 'max:128'],
+            'participants.*.nationality' => ['required', 'string', 'max:64'],
+            'participants.*.origin_country' => ['required', 'string', 'max:64'],
+            'participants.*.age_group' => ['required', 'integer', 'between:17,70'],
+            'participants.*.occupation' => ['required', 'string', 'max:64'],
+            'participants.*.id_type' => ['required', Rule::in(['KTP', 'SIM', 'NPWP'])],
+            'participants.*.id_number' => ['required', 'string', 'max:128'],
             'participants.*.health_certificate_path' => ['nullable', 'string'],
             'participants.*.health_certificate' => [
                 'nullable',
@@ -148,11 +172,18 @@ class BookingController extends Controller
         ]);
 
         $tripDate = Carbon::parse($validated['trip_date'])->startOfDay();
-        $minDays = (int) config('booking.min_days_before_trip', 30);
+        $minDays = (int) config('booking.min_days_before_trip', 3);
+        $maxDays = (int) config('booking.max_days_before_trip', 30);
 
         if ($tripDate->lt(now()->startOfDay()->addDays($minDays))) {
             return response()->json([
                 'message' => "Booking must be made at least {$minDays} days before the trip date",
+            ], 422);
+        }
+
+        if ($tripDate->gt(now()->startOfDay()->addDays($maxDays))) {
+            return response()->json([
+                'message' => "Booking cannot be made more than {$maxDays} days in advance",
             ], 422);
         }
 
@@ -172,8 +203,21 @@ class BookingController extends Controller
             ], 422);
         }
 
+        if ($validated['payment_method'] === 'transfer' && ! $request->hasFile('proof_of_payment') && empty($validated['proof_of_payment_path'])) {
+            return response()->json([
+                'message' => 'Proof of payment is required for bank transfer.',
+            ], 422);
+        }
+
         $participants = $validated['participants'];
         $participantCount = count($participants);
+
+        $leaders = collect($participants)->filter(fn ($participant) => (bool) ($participant['is_leader'] ?? false));
+        if ($leaders->count() !== 1) {
+            return response()->json([
+                'message' => 'Exactly one participant must be assigned as the leader.',
+            ], 422);
+        }
 
         $quota = RouteDailyQuota::query()
             ->where('route_id', $routeId)
@@ -205,6 +249,11 @@ class BookingController extends Controller
         }
 
         $booking = DB::transaction(function () use ($validated, $participants, $participantCount, $hiker, $user, $tripDate, $request) {
+            $proofPath = $validated['proof_of_payment_path'] ?? null;
+
+            if ($request->hasFile('proof_of_payment')) {
+                $proofPath = $request->file('proof_of_payment')->store('payment-proofs', 'public');
+            }
             $booking = Booking::create([
                 'trip_date' => $tripDate,
                 'route_id' => $validated['route_id'],
@@ -214,6 +263,8 @@ class BookingController extends Controller
                 'payment_due_at' => $this->paymentDueDate($validated['payment_method'], $tripDate),
                 'amount' => $validated['amount'] ?? 0,
                 'currency' => strtoupper($validated['currency'] ?? 'IDR'),
+                'contact_phone' => $validated['contact_phone'],
+                'proof_of_payment_path' => $proofPath,
                 'notes' => $validated['notes'] ?? null,
                 'participants_count' => $participantCount,
                 'created_by' => $user->id,

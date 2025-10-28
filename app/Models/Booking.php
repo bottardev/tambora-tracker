@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\RouteDailyQuota;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class Booking extends Model
@@ -28,6 +29,8 @@ class Booking extends Model
         'paid_at',
         'amount',
         'currency',
+        'contact_phone',
+        'proof_of_payment_path',
         'participants_count',
         'notes',
         'created_by',
@@ -40,6 +43,10 @@ class Booking extends Model
         'paid_at' => 'datetime',
         'amount' => 'decimal:2',
         'participants_count' => 'integer',
+    ];
+
+    protected $appends = [
+        'proof_of_payment_url',
     ];
 
     protected static function booted(): void
@@ -138,5 +145,28 @@ class Booking extends Model
             $quota->booked = $booked;
             $quota->save();
         }
+    }
+
+    public function getProofOfPaymentUrlAttribute(): ?string
+    {
+        $path = $this->proof_of_payment_path;
+
+        if (! $path) {
+            return null;
+        }
+
+        if (Str::startsWith($path, ['http://', 'https://'])) {
+            return $path;
+        }
+
+        if (Str::startsWith($path, ['/storage/', 'storage/'])) {
+            return url($path);
+        }
+
+        if (Storage::disk('public')->exists($path)) {
+            return Storage::disk('public')->url($path);
+        }
+
+        return $path;
     }
 }

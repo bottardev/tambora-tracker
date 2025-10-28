@@ -41,9 +41,17 @@ class RouteDailyQuotaResource extends Resource
                 TextInput::make('booked')
                     ->numeric()
                     ->minValue(0)
-                    ->helperText('The system automatically updates this value when bookings are confirmed.')
+                    ->helperText('Automatically updated when eligible bookings are saved.')
                     ->disabled()
                     ->dehydrated(false),
+                Forms\Components\Placeholder::make('summary')
+                    ->label('Summary')
+                    ->content(fn ($record) => $record ? sprintf(
+                        '%d capacity, %d booked, %d available',
+                        (int) $record->capacity,
+                        (int) $record->booked,
+                        (int) $record->available
+                    ) : '—'),
                 Select::make('status')
                     ->options([
                         'open' => 'Open',
@@ -66,8 +74,11 @@ class RouteDailyQuotaResource extends Resource
                     ->date()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('capacity')
+                    ->label('Capacity / Booked')
+                    ->formatStateUsing(fn ($state, $record) => sprintf('%d / %d', (int) $state, (int) $record->booked))
                     ->sortable(),
-                Tables\Columns\TextColumn::make('booked')
+                Tables\Columns\TextColumn::make('available')
+                    ->label('Available')
                     ->sortable(),
                 Tables\Columns\BadgeColumn::make('status')
                     ->colors([
