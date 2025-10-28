@@ -2,7 +2,11 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Widgets\BookingStatsOverview;
 use App\Filament\Widgets\LiveTripsMap;
+use App\Filament\Widgets\OutstandingPaymentsTable;
+use App\Filament\Widgets\PaymentMethodChart;
+use App\Filament\Widgets\UpcomingCapacityTable;
 use Filament\Navigation\NavigationGroup;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -36,6 +40,10 @@ class AdminPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
+                BookingStatsOverview::class,
+                PaymentMethodChart::class,
+                UpcomingCapacityTable::class,
+                OutstandingPaymentsTable::class,
                 LiveTripsMap::class,
             ])
             ->middleware([
