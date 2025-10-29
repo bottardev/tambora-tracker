@@ -5,7 +5,7 @@ namespace App\Filament\Pages;
 use App\Filament\Widgets\BookingStatsOverview;
 use App\Filament\Widgets\LiveTripsMap;
 use App\Filament\Widgets\OutstandingPaymentsTable;
-use App\Filament\Widgets\PaymentMethodChart;
+use App\Filament\Widgets\RouteHikerStatsChart;
 use App\Filament\Widgets\UpcomingCapacityTable;
 use Filament\Pages\Dashboard as BaseDashboard;
 
@@ -17,7 +17,7 @@ class Dashboard extends BaseDashboard
     {
         return [
             BookingStatsOverview::class,
-            PaymentMethodChart::class,
+            RouteHikerStatsChart::class,
             UpcomingCapacityTable::class,
             OutstandingPaymentsTable::class,
             LiveTripsMap::class,
