@@ -76,10 +76,5 @@ class RouteHikerStatsChart extends ChartWidget
         return $months;
     }
 
-    public function getHeading(): string
-    {
-        $filter = $this->filter ?? Carbon::now()->format('Y-m');
-        $label = Carbon::createFromFormat('Y-m', $filter)->translatedFormat('F Y');
-        return "Trips & Hikers per Route ({$label})";
-    }
+
 }
