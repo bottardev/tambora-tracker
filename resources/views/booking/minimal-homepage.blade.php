@@ -117,7 +117,7 @@
                 @forelse($routes as $route)
                 <div class="col-lg-4 col-md-6 mb-4">
                     <div class="card route-card h-100">
-                        <img src="https://images.unsplash.com/photo-1464822759844-d150baec93c5?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=300&q=80" class="card-img-top" alt="{{ $route->name }}">
+                        <img src="{{ $route->image ? asset('storage/' . $route->image) : 'https://images.unsplash.com/photo-1464822759844-d150baec93c5?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=300&q=80' }}" class="card-img-top" alt="{{ $route->name }}" style="height: 200px; object-fit: cover;">
                         <div class="card-body">
                             <h5 class="card-title">{{ $route->name }}</h5>
                             <p class="card-text">{{ Str::limit($route->description ?? 'Experience the adventure of Mount Tambora with professional guidance and safety equipment.', 100) }}</p>

@@ -31,6 +31,19 @@ class RouteResource extends Resource
                     ->maxLength(255),
                 Textarea::make('description')
                     ->columnSpanFull(),
+                Forms\Components\FileUpload::make('image')
+                    ->label('Route Image')
+                    ->image()
+                    ->imageEditor()
+                    ->imageEditorAspectRatios([
+                        '16:9',
+                        '4:3',
+                        '1:1',
+                    ])
+                    ->directory('route-images')
+                    ->disk('public')
+                    ->visibility('public')
+                    ->helperText('Upload an image to represent this route. Recommended size: 800x600px or larger.'),
                 Forms\Components\TextInput::make('total_distance_km')
                     ->numeric()
                     ->default(null),
@@ -54,11 +67,20 @@ class RouteResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')
-                    ->label('ID')
-                    ->searchable(),
+                Tables\Columns\ImageColumn::make('image')
+                    ->label('Image')
+                    ->size(80)
+                    ->square(),
                 Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
+                    ->label('Route Name')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('description')
+                    ->label('Description')
+                    ->limit(50)
+                    ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
+                        return $column->getState();
+                    }),
                 Tables\Columns\TextColumn::make('total_distance_km')
                     ->numeric()
                     ->sortable(),

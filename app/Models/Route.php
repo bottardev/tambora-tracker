@@ -11,7 +11,16 @@ class Route extends Model
 {
     use HasUuid;
 
-    protected $fillable = ['name', 'description', 'path', 'total_distance_km'];
+    protected $fillable = ['name', 'description', 'image', 'path', 'total_distance_km'];
+
+    protected function imageUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value, array $attributes) => $attributes['image'] 
+                ? asset('storage/' . $attributes['image']) 
+                : 'https://images.unsplash.com/photo-1464822759844-d150baec93c5?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=300&q=80'
+        );
+    }
 
     protected function path(): Attribute
     {
